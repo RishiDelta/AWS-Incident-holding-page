@@ -447,13 +447,10 @@
         if (!state) {
             // ── FIRST VISIT: calculate and lock all timestamps ───────
             //
-            //  Timeline spans: T0 (now-15m) → now
-            //  4 events spread across 15 minutes — none can exceed now.
-            //
-            //  T0  = now - 15m  → Detected
-            //  t1  = now - 10m  → Identified
-            //  t2  = now -  5m  → Investigating #1
-            //  t3  = now        → Latest update  (exact open time)
+            //  T0       = now - 15m  →  Detected
+            //  T0 + 6m  = now -  9m  →  Identified
+            //  T0 + 9m  = now -  6m  →  Investigating
+            //  T0 + 13m = now -  2m  →  Latest update  (2m before now, not exactly now)
             //
             const firstOpen = new Date();
             const nowMs     = firstOpen.getTime();
@@ -461,11 +458,11 @@
 
             state = {
                 incidentId:    makeIncidentId(new Date(T0ms)),
-                T0ms:          T0ms,                   // now - 15m  Detected
-                t1ms:          nowMs - 10 * 60 * 1000, // now - 10m  Identified
-                t2ms:          nowMs -  5 * 60 * 1000, // now -  5m  Investigating
-                t3ms:          nowMs,                   // now        Latest
-                lastUpdatedMs: nowMs
+                T0ms:          T0ms,                        // Detected
+                t1ms:          T0ms +  6 * 60 * 1000,       // +6m  Identified
+                t2ms:          T0ms +  9 * 60 * 1000,       // +9m  Investigating
+                t3ms:          T0ms + 13 * 60 * 1000,       // +13m Latest update
+                lastUpdatedMs: firstOpen.getTime()
             };
 
             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
