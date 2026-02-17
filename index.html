@@ -181,13 +181,6 @@
         }
         .timeline-section h3 { font-size: 18px; font-weight: 600; margin-bottom: 12px; color: #16191f; }
 
-        .tz-note {
-            font-size: 12px; color: #586069;
-            background: #f6f8fa; border: 1px solid #e1e4e8;
-            padding: 8px 14px; border-radius: 4px;
-            margin-bottom: 20px; display: inline-block;
-        }
-
         .timeline { position: relative; padding-left: 30px; }
         .timeline::before {
             content: '';
@@ -356,7 +349,6 @@
 
         <div class="timeline-section">
             <h3>Incident Timeline</h3>
-            <div class="tz-note" id="tz-note">Detecting timezone...</div>
             <div class="timeline" id="timeline-container">Loading timeline...</div>
         </div>
     </div>
@@ -415,7 +407,9 @@
         const now = new Date();
         const T0  = new Date(now.getTime() - 15 * 60 * 1000);  // T-15 mins
 
-        // Timeline events — offsets in minutes from T0, oldest first
+        // Timeline events — offsets in minutes from T0, oldest first.
+        // The last entry uses a special flag `useNow: true` so it always
+        // shows the exact current time when the page is opened.
         const EVENTS = [
             {
                 offset:  0,
@@ -436,7 +430,7 @@
                 msg:     'Issue confirmed as isolated to DNS resolution services in EU-West-2 with cascading impact to EU-West-1 and EU-Central-1. Additional engineering resources have been mobilised.'
             },
             {
-                offset:  45,
+                useNow:  true,           // ← pinned to real current time
                 label:   'Update',
                 status:  'Investigating',
                 msg:     'Engineering teams have identified the faulty DNS resolver infrastructure in EU-West-2. A remediation plan is being executed. ETA for resolution: 60–90 minutes.'
@@ -471,21 +465,13 @@
         document.getElementById('duration-card').textContent = renderDuration();
 
         // ──────────────────────────────────────────────────────────────
-        //  RENDER: Timezone note
-        // ──────────────────────────────────────────────────────────────
-        document.getElementById('tz-note').innerHTML =
-            `🕐 All timestamps shown in <strong>UTC</strong>. ` +
-            `Your local timezone detected as <strong>${localTz} (${offsetStr})</strong> — ` +
-            `local equivalent shown beneath each entry.`;
-
-        // ──────────────────────────────────────────────────────────────
         //  RENDER: Timeline (most recent first)
         // ──────────────────────────────────────────────────────────────
         const container = document.getElementById('timeline-container');
         container.innerHTML = '';
 
         [...EVENTS].reverse().forEach((ev, idx) => {
-            const evTime  = new Date(T0.getTime() + ev.offset * 60 * 1000);
+            const evTime  = ev.useNow ? now : new Date(T0.getTime() + ev.offset * 60 * 1000);
             const isFirst = idx === 0;   // visually first = most recent
 
             const item = document.createElement('div');
