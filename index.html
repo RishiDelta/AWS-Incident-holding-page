@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Service Status - EU-West-2 DNS Incident</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Amazon Ember", "Helvetica Neue", Roboto, Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #16191f;
+            line-height: 1.6;
+        }
+
+        .aws-header {
+            background-color: #232f3e;
+            color: white;
+            padding: 16px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .aws-header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+        }
+
+        .aws-logo {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .aws-logo-smile {
+            color: #ff9900;
+            margin-left: 2px;
+        }
+
+        .support-badge {
+            background-color: #ff9900;
+            color: #232f3e;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 15px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 24px;
+        }
+
+        .support-info {
+            background: linear-gradient(135deg, #232f3e 0%, #37475a 100%);
+            color: white;
+            padding: 20px 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .support-info-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .support-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #ff9900;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-weight: bold;
+            color: #232f3e;
+            font-size: 18px;
+        }
+
+        .support-info h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .support-info p {
+            font-size: 13px;
+            color: #d5dbdb;
+            margin-left: 52px;
+        }
+
+        .critical-banner {
+            background-color: #d13212;
+            color: white;
+            padding: 24px 28px;
+            border-radius: 8px;
+            margin-bottom: 28px;
+            box-shadow: 0 4px 12px rgba(209, 50, 18, 0.25);
+            border-left: 6px solid #a32a0f;
+        }
+
+        .critical-banner-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .critical-icon {
+            font-size: 28px;
+            margin-right: 12px;
+        }
+
+        .critical-banner h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .critical-banner p {
+            font-size: 15px;
+            line-height: 1.6;
+            margin-left: 40px;
+        }
+
+        .incident-details {
+            background-color: white;
+            border-radius: 8px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            border: 1px solid #e1e4e8;
+        }
+
+        .incident-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f2f4;
+        }
+
+        .incident-title-section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #16191f;
+            margin-bottom: 8px;
+        }
+
+        .incident-meta {
+            font-size: 13px;
+            color: #586069;
+        }
+
+        .incident-meta strong {
+            color: #16191f;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge {
+            background-color: #d13212;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(209, 50, 18, 0.3);
+        }
+
+        .status-pulse {
+            width: 12px;
+            height: 12px;
+            background-color: #d13212;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .incident-summary {
+            background-color: #fef5f5;
+            padding: 18px;
+            border-radius: 6px;
+            border-left: 4px solid #d13212;
+            margin-bottom: 24px;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .info-card {
+            background-color: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            border: 1px solid #e1e4e8;
+        }
+
+        .info-card-label {
+            font-size: 12px;
+            color: #586069;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .info-card-value {
+            font-size: 15px;
+            color: #16191f;
+            font-weight: 600;
+        }
+
+        .region-badge {
+            background-color: #ec7211;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .affected-services-section {
+            margin-top: 24px;
+        }
+
+        .affected-services-section h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #16191f;
+            display: flex;
+            align-items: center;
+        }
+
+        .service-count {
+            background-color: #d13212;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            margin-left: 10px;
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 14px;
+        }
+
+        .service-card {
+            background-color: white;
+            border: 2px solid #d13212;
+            border-radius: 6px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(209, 50, 18, 0.1);
+        }
+
+        .service-card:hover {
+            box-shadow: 0 4px 8px rgba(209, 50, 18, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .service-status-icon {
+            width: 14px;
+            height: 14px;
+            background-color: #d13212;
+            border-radius: 50%;
+            margin-right: 12px;
+            flex-shrink: 0;
+            box-shadow: 0 0 0 3px rgba(209, 50, 18, 0.2);
+        }
+
+        .service-info {
+            flex: 1;
+        }
+
+        .service-name {
+            font-weight: 600;
+            color: #16191f;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .service-description {
+            font-size: 12px;
+            color: #586069;
+        }
+
+        .timeline-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 28px;
+            margin-top: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            border: 1px solid #e1e4e8;
+        }
+
+        .timeline-section h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #16191f;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: linear-gradient(to bottom, #d13212, #ec7211);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px dashed #e1e4e8;
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 4px;
+            width: 16px;
+            height: 16px;
+            background-color: #d13212;
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 0 2px #d13212;
+        }
+
+        .timeline-time {
+            font-size: 13px;
+            color: #586069;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .timeline-content {
+            font-size: 14px;
+            color: #16191f;
+            line-height: 1.6;
+        }
+
+        .timeline-status {
+            display: inline-block;
+            background-color: #fef5f5;
+            color: #d13212;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 32px 24px;
+            color: #586069;
+            font-size: 13px;
+            border-top: 1px solid #e1e4e8;
+            margin-top: 40px;
+        }
+
+        .footer-links {
+            margin-top: 12px;
+        }
+
+        .footer-links a {
+            color: #0366d6;
+            text-decoration: none;
+            margin: 0 12px;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="aws-header">
+        <div class="aws-header-content">
+            <div class="aws-logo">
+                amazon<span class="aws-logo-smile">▶</span>
+            </div>
+            <div class="support-badge">AWS SUPPORT</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="support-info">
+            <div class="support-info-header">
+                <div class="support-icon">P</div>
+                <h2>AWS Support Team - Phil Thompson</h2>
+            </div>
+            <p>This incident status page is being shared with affected customers | Last updated: 17 Feb 2026, 14:35 UTC</p>
+        </div>
+
+        <div class="critical-banner">
+            <div class="critical-banner-header">
+                <div class="critical-icon">⚠️</div>
+                <h1>Major Service Disruption - DNS Resolution Failure</h1>
+            </div>
+            <p>We are experiencing a critical DNS resolution failure in the EU-West-2 region that is impacting multiple AWS services across EU regions. Our engineering teams are actively investigating and working to restore normal operations.</p>
+        </div>
+
+        <div class="incident-details">
+            <div class="incident-header">
+                <div class="incident-title-section">
+                    <h2>Incident Details</h2>
+                    <div class="incident-meta">
+                        <strong>Incident ID:</strong> INC-2026-02-17-EU-DNS-8472 | 
+                        <strong>Started:</strong> 17 Feb 2026, 13:12 UTC | 
+                        <strong>Duration:</strong> 1h 23m
+                    </div>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-pulse"></div>
+                    <div class="status-badge">Investigating</div>
+                </div>
+            </div>
+
+            <div class="incident-summary">
+                <strong>Summary:</strong> A DNS resolution failure has been detected in the EU-West-2 region affecting the ability of services to resolve internal and external DNS queries. This is causing service degradation and connectivity issues for resources deployed across EU-West-1, EU-West-2, and EU-Central-1 regions. Customers may experience failures in container registry pulls, API calls, database connections, and inter-service communications.
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-card-label">Primary Region</div>
+                    <div class="info-card-value">
+                        <span class="region-badge">EU-WEST-2</span>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Impact Scope</div>
+                    <div class="info-card-value">EU-West-1, EU-West-2, EU-Central-1</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Root Cause</div>
+                    <div class="info-card-value">DNS Infrastructure Failure</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Severity Level</div>
+                    <div class="info-card-value" style="color: #d13212;">Critical (P1)</div>
+                </div>
+            </div>
+
+            <div class="affected-services-section">
+                <h3>Affected Services <span class="service-count">7</span></h3>
+                <div class="service-grid">
+                    <div class="service-card">
+                        <div class="service-status-icon"></div>
+                        <div class="service-info">
+                            <div class="service-name">Amazon ECR (Elastic Container Registry)</div>
+                            <div class="service-description">Image pulls and pushes failing</div>
+                        </div>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-status-icon"></div>
+                        <div class="service-info">
+                            <div class="service-name">Amazon RDS (Relational Database Service)</div>
+                            <div class="service-description">Connection timeouts and DNS errors</div>
+                        </div>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-status-icon"></div>
+                        <div class="service-info">
+                            <div class="service-name">Amazon EKS (Elastic Kubernetes Service)</div>
+                            <div class="service-description">Pod DNS resolution failures</div>
+                        </div>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-status-icon"></div>
+                        <div class="service-info">
+                            <div class="service-name">AWS Lambda</div>
+                            <div class="service-description">Function invocation errors</div>
+                        </div>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-status-icon"></div>
+                        <div class="service-info">
+                            <div class="service-name">Amazon ECS (Elastic Container Service)</div>
+                            <div class="service-description">Task launch failures and service disruption</div>
+                        </div>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-status-icon"></div>
+                        <div class="service-info">
+                            <div class="service-name">AWS Systems Manager</div>
+                            <div class="service-description">Agent communication issues</div>
+                        </div>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-status-icon"></div>
+                        <div class="service-info">
+                            <div class="service-name">Amazon CloudWatch</div>
+                            <div class="service-description">Delayed metrics and log ingestion</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-section">
+            <h3>Incident Timeline</h3>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-time">14:35 UTC - 17 Feb 2026</div>
+                    <div class="timeline-content">
+                        <strong>Update:</strong> Engineering teams have identified the DNS resolver infrastructure issue in EU-West-2. A remediation plan is being executed. ETA for resolution: 60-90 minutes.
+                        <span class="timeline-status">Investigating</span>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-time">14:15 UTC - 17 Feb 2026</div>
+                    <div class="timeline-content">
+                        <strong>Update:</strong> We have confirmed the issue is isolated to DNS resolution services in EU-West-2 with cascading impact to EU-West-1 and EU-Central-1. Additional engineering resources have been mobilized.
+                        <span class="timeline-status">Investigating</span>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-time">13:45 UTC - 17 Feb 2026</div>
+                    <div class="timeline-content">
+                        <strong>Update:</strong> Multiple services across EU regions are experiencing degraded performance due to DNS resolution failures. Our teams are investigating the root cause.
+                        <span class="timeline-status">Identified</span>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-time">13:12 UTC - 17 Feb 2026</div>
+                    <div class="timeline-content">
+                        <strong>Incident Detected:</strong> Elevated error rates detected for DNS queries in EU-West-2 region. Investigation initiated.
+                        <span class="timeline-status">Detected</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</p>
+        <div class="footer-links">
+            <a href="#">AWS Service Health Dashboard</a>
+            <a href="#">Contact Support</a>
+            <a href="#">Documentation</a>
+        </div>
+    </div>
+</body>
+</html>
