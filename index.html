@@ -400,57 +400,82 @@
         }
 
         // ──────────────────────────────────────────────────────────────
-        //  TIME ANCHORS
-        //  T0 = "Incident Detected" = NOW - 15 minutes  (fixed anchor)
-        //  now = current real-world time (used for "Last updated")
+        //  PERSISTENCE via localStorage
+        //
+        //  On FIRST open:  calculate all timestamps, save to localStorage.
+        //  On every REFRESH: read from localStorage — nothing changes.
+        //
+        //  Storage key: "aws_drill_incident_v1"
+        //  To reset (new drill): clear localStorage in DevTools or use
+        //  a different browser / incognito window.
         // ──────────────────────────────────────────────────────────────
-        const now = new Date();
-        const T0  = new Date(now.getTime() - 15 * 60 * 1000);  // T-15 mins
 
-        // Timeline events — offsets in minutes from T0, oldest first.
-        // The last entry uses a special flag `useNow: true` so it always
-        // shows the exact current time when the page is opened.
-        const EVENTS = [
+        const STORAGE_KEY = 'aws_drill_incident_v1';
+
+        // Event templates — static content only, no timestamps here
+        const EVENT_TEMPLATES = [
             {
-                offset:  0,
-                label:   'Incident Detected',
-                status:  'Detected',
-                msg:     'Elevated error rates detected for DNS queries in EU-West-2 region. Automated alerting triggered and investigation initiated.'
+                label:  'Incident Detected',
+                status: 'Detected',
+                msg:    'Elevated error rates detected for DNS queries in EU-West-2 region. Automated alerting triggered and investigation initiated.'
             },
             {
-                offset:  13,
-                label:   'Update',
-                status:  'Identified',
-                msg:     'Multiple services across EU regions are experiencing degraded performance due to DNS resolution failures. Our teams are actively investigating the root cause.'
+                label:  'Update',
+                status: 'Identified',
+                msg:    'Multiple services across EU regions are experiencing degraded performance due to DNS resolution failures. Our teams are actively investigating the root cause.'
             },
             {
-                offset:  28,
-                label:   'Update',
-                status:  'Investigating',
-                msg:     'Issue confirmed as isolated to DNS resolution services in EU-West-2 with cascading impact to EU-West-1 and EU-Central-1. Additional engineering resources have been mobilised.'
+                label:  'Update',
+                status: 'Investigating',
+                msg:    'Issue confirmed as isolated to DNS resolution services in EU-West-2 with cascading impact to EU-West-1 and EU-Central-1. Additional engineering resources have been mobilised.'
             },
             {
-                useNow:  true,           // ← pinned to real current time
-                label:   'Update',
-                status:  'Investigating',
-                msg:     'Engineering teams have identified the faulty DNS resolver infrastructure in EU-West-2. A remediation plan is being executed. ETA for resolution: 60–90 minutes.'
+                label:  'Update',
+                status: 'Investigating',
+                msg:    'Engineering teams have identified the faulty DNS resolver infrastructure in EU-West-2. A remediation plan is being executed. ETA for resolution: 60–90 minutes.'
             }
         ];
 
-        // ──────────────────────────────────────────────────────────────
-        //  LOCAL TIMEZONE INFO
-        // ──────────────────────────────────────────────────────────────
-        const localTz    = now.toLocaleTimeString('en-US', {timeZoneName:'short'}).split(' ').pop();
-        const offsetMins = -now.getTimezoneOffset();  // positive = east of UTC
-        const absH       = Math.floor(Math.abs(offsetMins) / 60);
-        const absM       = Math.abs(offsetMins) % 60;
-        const offsetStr  = `UTC${offsetMins >= 0 ? '+' : '-'}${pad(absH)}:${pad(absM)}`;
+        // ── LOAD or INITIALISE persisted state ──────────────────────
+        let state = null;
+
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) state = JSON.parse(raw);
+        } catch(e) { /* storage unavailable — fall through */ }
+
+        if (!state) {
+            // ── FIRST VISIT: calculate and lock all timestamps ───────
+            const firstOpen = new Date();                                    // exact open time
+            const T0ms      = firstOpen.getTime() - 15 * 60 * 1000;         // T-15 mins
+
+            state = {
+                incidentId:    makeIncidentId(new Date(T0ms)),
+                T0ms:          T0ms,                                         // Detected
+                t1ms:          T0ms + 13 * 60 * 1000,                       // Identified
+                t2ms:          T0ms + 28 * 60 * 1000,                       // Investigating #1
+                t3ms:          firstOpen.getTime(),                          // Latest = exact open time
+                lastUpdatedMs: firstOpen.getTime()
+            };
+
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+        }
+
+        // ── Resolve locked timestamps into Date objects ──────────────
+        const T0            = new Date(state.T0ms);
+        const eventTimes    = [
+            new Date(state.T0ms),
+            new Date(state.t1ms),
+            new Date(state.t2ms),
+            new Date(state.t3ms)
+        ];
+        const lastUpdated   = new Date(state.lastUpdatedMs);
 
         // ──────────────────────────────────────────────────────────────
-        //  RENDER: Support header
+        //  RENDER: Support header  (locked "last updated")
         // ──────────────────────────────────────────────────────────────
         document.getElementById('support-last-updated').textContent =
-            `This incident status page is being shared with affected customers | Last updated: ${fmtUTC(now)}`;
+            `This incident status page is being shared with affected customers | Last updated: ${fmtUTC(lastUpdated)}`;
 
         // ──────────────────────────────────────────────────────────────
         //  RENDER: Incident meta row
@@ -458,21 +483,21 @@
         function renderDuration() { return fmtDuration(new Date() - T0); }
 
         document.getElementById('incident-meta').innerHTML =
-            `<strong>Incident ID:</strong> ${makeIncidentId(T0)} &nbsp;|&nbsp; ` +
+            `<strong>Incident ID:</strong> ${state.incidentId} &nbsp;|&nbsp; ` +
             `<strong>Started:</strong> ${fmtUTC(T0)} &nbsp;|&nbsp; ` +
             `<strong>Duration:</strong> <span id="dur-inline">${renderDuration()}</span>`;
 
         document.getElementById('duration-card').textContent = renderDuration();
 
         // ──────────────────────────────────────────────────────────────
-        //  RENDER: Timeline (most recent first)
+        //  RENDER: Timeline (most recent first, all times locked)
         // ──────────────────────────────────────────────────────────────
         const container = document.getElementById('timeline-container');
         container.innerHTML = '';
 
-        [...EVENTS].reverse().forEach((ev, idx) => {
-            const evTime  = ev.useNow ? now : new Date(T0.getTime() + ev.offset * 60 * 1000);
-            const isFirst = idx === 0;   // visually first = most recent
+        [...EVENT_TEMPLATES].reverse().forEach((ev, idx) => {
+            const evTime  = eventTimes[EVENT_TEMPLATES.length - 1 - idx];   // reverse index
+            const isFirst = idx === 0;
 
             const item = document.createElement('div');
             item.className = 'timeline-item';
@@ -493,10 +518,10 @@
         //  RENDER: Footer
         // ──────────────────────────────────────────────────────────────
         document.getElementById('footer-copy').textContent =
-            `© ${now.getUTCFullYear()}, Amazon Web Services, Inc. or its affiliates. All rights reserved.`;
+            `© ${T0.getUTCFullYear()}, Amazon Web Services, Inc. or its affiliates. All rights reserved.`;
 
         // ──────────────────────────────────────────────────────────────
-        //  LIVE: Update duration every 60 seconds
+        //  LIVE: Duration counter ticks every 60 s (T0 stays locked)
         // ──────────────────────────────────────────────────────────────
         setInterval(() => {
             const d = renderDuration();
